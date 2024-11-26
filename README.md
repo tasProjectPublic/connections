@@ -85,7 +85,7 @@ Quick Start:
 # Clone the repository
 
 # Navigate to project directory
-cd connections-game
+cd connections
 
 # Open in browser
 open index.html
