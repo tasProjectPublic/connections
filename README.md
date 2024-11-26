@@ -8,6 +8,17 @@ A web-based implementation of the popular NYT Connections word puzzle game. Chal
 Experience the Connections game firsthand:
 [Play Connections Game Online](https://ConnectionsHint.tips)
 
+🔌 Embed in Other Websites
+You can easily embed the Connections game into your website:
+```html
+<iframe 
+    src="https://connectionshint.tips" 
+    width="100%" 
+    height="800px" 
+    style="border: none; max-width: 720px; margin: 0 auto;"
+></iframe>
+```
+
 ## What is Connections? 🤔
 
 Connections is an addictive word puzzle game inspired by the New York Times' popular daily puzzle. In this game, players face 16 words that need to be organized into four distinct groups of four, with each group sharing a common theme or connection.
