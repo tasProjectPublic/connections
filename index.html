@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connections Game</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .card {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+
+        .mistakes {
+            margin-bottom: 16px;
+            color: #666;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .word-button {
+            padding: 16px;
+            text-align: center;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #f3f4f6;
+            transition: all 0.2s;
+        }
+
+        .word-button:not([disabled]):hover {
+            background-color: #e5e7eb;
+        }
+
+        .word-button.selected {
+            outline: 2px solid #3b82f6;
+        }
+
+        .word-button:disabled {
+            cursor: not-allowed;
+            opacity: 1;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .control-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #e5e7eb;
+        }
+
+        .control-button:hover {
+            background-color: #d1d5db;
+        }
+
+        .submit-button {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .submit-button:hover:not(:disabled) {
+            background-color: #2563eb;
+        }
+
+        .submit-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .message {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        /* Color classes for solved groups */
+        .bg-yellow-200 { background-color: #fef08a; }
+        .bg-green-200 { background-color: #bbf7d0; }
+        .bg-blue-200 { background-color: #bfdbfe; }
+        .bg-purple-200 { background-color: #e9d5ff; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="text-center">
+            <h1>Create four groups of four!</h1>
+            <div class="mistakes">
+                Mistakes Remaining: <span id="mistakes">●●●●</span>
+            </div>
+        </div>
+
+        <div id="gameGrid" class="game-grid"></div>
+
+        <div class="controls">
+            <button class="control-button" onclick="shuffleWords()">Shuffle</button>
+            <button class="control-button" onclick="deselectAll()">Deselect All</button>
+            <button id="submitButton" class="control-button submit-button" onclick="handleSubmit()" disabled>Submit</button>
+        </div>
+
+        <div id="message" class="message"></div>
+    </div>
+
+    <script>
+        // Game data
+        const gameData = {
+            groups: [
+                {
+                    id: 1,
+                    color: "bg-yellow-200",
+                    words: ["FETT", "STAR", "BOBA", "OXFORD"]
+                },
+                {
+                    id: 2,
+                    color: "bg-green-200",
+                    words: ["TAPIOCA", "SPONGE", "PENN", "BUBBLE"]
+                },
+                {
+                    id: 3,
+                    color: "bg-blue-200",
+                    words: ["ZIT", "TORTE", "FLANNEL", "CORAL"]
+                },
+                {
+                    id: 4,
+                    color: "bg-purple-200",
+                    words: ["POLO", "JELLY", "TEE", "PEARL"]
+                }
+            ]
+        };
+
+        // Game state
+        let words = [];
+        let selectedWords = [];
+        let solvedWords = [];
+        let mistakesRemaining = 4;
+
+        // Initialize game
+        function initGame() {
+            words = gameData.groups.flatMap(group => 
+                group.words.map(word => ({
+                    word,
+                    groupId: group.id,
+                    color: group.color
+                }))
+            );
+            shuffleWords();
+            renderGame();
+        }
+
+        // Shuffle words
+        function shuffleWords() {
+            words.sort(() => Math.random() - 0.5);
+            renderGame();
+        }
+
+        // Toggle word selection
+        function toggleWord(index) {
+            const word = words[index];
+            if (solvedWords.includes(word.word)) return;
+
+            const selectedIndex = selectedWords.findIndex(w => w.word === word.word);
+            if (selectedIndex !== -1) {
+                selectedWords.splice(selectedIndex, 1);
+            } else if (selectedWords.length < 4) {
+                selectedWords.push(word);
+            }
+
+            renderGame();
+            updateSubmitButton();
+        }
+
+        // Submit guess
+        function handleSubmit() {
+            if (selectedWords.length !== 4) {
+                showMessage('Please select exactly 4 words');
+                return;
+            }
+
+            const firstGroupId = selectedWords[0].groupId;
+            const isCorrect = selectedWords.every(word => word.groupId === firstGroupId);
+
+            if (isCorrect) {
+                solvedWords.push(...selectedWords.map(w => w.word));
+                selectedWords = [];
+                showMessage('Correct!');
+            } else {
+                mistakesRemaining--;
+                document.getElementById('mistakes').textContent = '●'.repeat(mistakesRemaining);
+                selectedWords = [];
+                showMessage('Incorrect. Try again!');
+            }
+
+            renderGame();
+            updateSubmitButton();
+        }
+
+        // Deselect all words
+        function deselectAll() {
+            selectedWords = [];
+            renderGame();
+            updateSubmitButton();
+        }
+
+        // Show message
+        function showMessage(text) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            setTimeout(() => messageEl.textContent = '', 2000);
+        }
+
+        // Update submit button state
+        function updateSubmitButton() {
+            const submitButton = document.getElementById('submitButton');
+            submitButton.disabled = selectedWords.length !== 4;
+        }
+
+        // Render game grid
+        function renderGame() {
+            const gameGrid = document.getElementById('gameGrid');
+            gameGrid.innerHTML = words.map((word, index) => {
+                const isSelected = selectedWords.find(w => w.word === word.word);
+                const isSolved = solvedWords.includes(word.word);
+                return `
+                    <button 
+                        class="word-button ${isSelected ? 'selected' : ''} ${isSolved ? word.color : ''}"
+                        onclick="toggleWord(${index})"
+                        ${isSolved ? 'disabled' : ''}
+                    >
+                        ${word.word}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        // Start game
+        initGame();
+    </script>
+</body>
+</html>
